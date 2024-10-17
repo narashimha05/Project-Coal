@@ -4,7 +4,7 @@ import { AuthProvider, AuthContext } from './context/AuthContext';
 import Signin from './pages/Signin';
 import Signup from './pages/Signup';
 import Mainpage from './pages/Mainpage';
-
+import AdminPage from './pages/AdminPage';
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, loading } = React.useContext(AuthContext);
 
@@ -20,7 +20,7 @@ function App() {
   
     <>
     
-    <AuthProvider>
+    {/* <AuthProvider>
       <Router>
         <Routes>
           <Route path="/" element={<ProtectedRoute><Mainpage /></ProtectedRoute>} />
@@ -29,7 +29,8 @@ function App() {
           <Route path="/mainpage" element={<Mainpage />} />
         </Routes>
       </Router>
-    </AuthProvider>
+    </AuthProvider> */}
+    <AdminPage />
     
     </>
   );
