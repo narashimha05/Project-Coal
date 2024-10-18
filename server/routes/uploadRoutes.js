@@ -22,21 +22,27 @@ const columnWeights = {
 const calculateScore = (fileData, excelColumns, predefinedColumns, columnWeights) => {
     let totalScore = 0;
 
-   
     predefinedColumns.forEach((col) => {
-        const colIndex = excelColumns.indexOf(col);
+        const colIndex = excelColumns.indexOf(col);  // Find the index of the column in Excel data
         if (colIndex !== -1) {
+            // Extract column values
             const colValues = fileData.map((row) => parseFloat(row[colIndex] || 0));
+
+            // Calculate column mean
             const colMean = colValues.reduce((acc, val) => acc + val, 0) / colValues.length;
 
-            
-            const weight = columnWeights[col] || 0;  
-            totalScore += colMean * weight;  
+            // Get column weight
+            const weight = columnWeights[col] || 0;
+
+            // Add to total score
+            totalScore += colMean * weight;
         }
     });
 
+    console.log(`Total Score: ${totalScore}`);  // Log the final total score
     return totalScore;
 };
+
 
 
 router.post('/upload', async (req, res) => {
