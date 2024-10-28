@@ -49,7 +49,7 @@ const AdminPage = () => {
 
     const handleSubmit = async () => {
         try {
-            const response = await axios.post('http://localhost:5000/api/upload', {
+            const response = await axios.post('https://project-coal-backend.onrender.com/api/upload', {
                 name,
                 truckName,
                 fileData: parsedData,
@@ -67,7 +67,7 @@ const AdminPage = () => {
 
     const fetchLeaderboard = async () => {
         try {
-            const response = await axios.get('http://localhost:5000/api/leaderboard');
+            const response = await axios.get('https://project-coal-backend.onrender.com/api/leaderboard');
             setLeaderboard(response.data);
         } catch (error) {
             console.error('Error fetching leaderboard:', error);
