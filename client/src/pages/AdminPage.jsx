@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import * as XLSX from 'xlsx';
 import axios from 'axios';
 import { AutoSizer, List } from 'react-virtualized';
-import 'react-virtualized/styles.css'; // Import necessary styles for react-virtualized
+import 'react-virtualized/styles.css';
 
 const AdminPage = () => {
     const [name, setName] = useState('');
@@ -10,17 +10,14 @@ const AdminPage = () => {
     const [excelColumns, setExcelColumns] = useState([]);
     const [parsedData, setParsedData] = useState([]);
     const [leaderboard, setLeaderboard] = useState([]);
-    
-    // Pagination-related state
     const [currentPage, setCurrentPage] = useState(1);
-    const [rowsPerPage] = useState(10); // Display 10 rows per page
+    const [rowsPerPage] = useState(10);
 
     const predefinedColumns = [
-        'Column1', 'Column2', 'Column3', 'Column4', 'Column5', 'Column6', 'Column7', 'Column8', 'Column9', 
-        'Column10', 'Column11', 'Column12', 'Column13', 'Column14', 'Column15', 'Column16', 'Column17'
+        'EFR', 'HRTVD', 'MET', 'ROT', 'ES', 'OP', 'EAPP', 'OT', 'CBP', 
+        'RP', 'WBVS', 'FBP', 'CT', 'TKPH', 'ES', 'LS', 'STB'
     ];
 
-    // Handle file upload and parse Excel file
     const handleFileChange = (e) => {
         const file = e.target.files[0];
         const reader = new FileReader();
@@ -31,28 +28,25 @@ const AdminPage = () => {
             const sheet = workbook.Sheets[workbook.SheetNames[0]];
             const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1 });
 
-            // Get headers and rows from Excel, limiting to 17 columns
-            const fileHeaders = jsonData[0].slice(0, 17); // Only the first 17 columns
-            const rows = jsonData.slice(1).map(row => row.slice(0, 17)); // Only the first 17 columns for each row
+            const fileHeaders = jsonData[0].slice(0, 17);
+            const rows = jsonData.slice(1).map(row => row.slice(0, 17));
 
             setExcelColumns(fileHeaders);
             setParsedData(rows);
         };
 
-        reader.readAsArrayBuffer(file); // Read file as an array buffer
+        reader.readAsArrayBuffer(file);
     };
 
-    // Get column data from parsed Excel
     const getColumnData = (columnName) => {
         const colIndex = excelColumns.indexOf(columnName);
         if (colIndex !== -1) {
-            return parsedData.map((row) => row[colIndex] || 0); // If no value, default to 0
+            return parsedData.map((row) => row[colIndex] || 0);
         } else {
-            return Array(parsedData.length).fill(0); // Fill with 0s if column not found
+            return Array(parsedData.length).fill(0);
         }
     };
 
-    // Handle form submission and score calculation
     const handleSubmit = async () => {
         try {
             const response = await axios.post('http://localhost:5000/api/upload', {
@@ -71,7 +65,6 @@ const AdminPage = () => {
         }
     };
 
-    // Fetch leaderboard data
     const fetchLeaderboard = async () => {
         try {
             const response = await axios.get('http://localhost:5000/api/leaderboard');
@@ -85,22 +78,23 @@ const AdminPage = () => {
         fetchLeaderboard();
     }, []);
 
-    // Calculate paginated data for current page
     const indexOfLastRow = currentPage * rowsPerPage;
     const indexOfFirstRow = indexOfLastRow - rowsPerPage;
     const currentRows = parsedData.slice(indexOfFirstRow, indexOfLastRow);
 
-    // Virtualized row renderer function
     const rowRenderer = ({ index, key, style }) => (
-        <div key={key} className="flex border-b-2 border-b-black">
+        <div key={key} style={style} className="flex border-b-2 border-b-black">
             {predefinedColumns.map((col, colIndex) => {
                 const columnData = getColumnData(col);
-                return <div key={colIndex} className="flex-1 p-[10px] text-center">{columnData[indexOfFirstRow + index]}</div>;
+                return (
+                    <div key={colIndex} className="flex-1 p-[5px] text-center">
+                        {columnData[indexOfFirstRow + index]}
+                    </div>
+                );
             })}
         </div>
     );
 
-    // Handle page change
     const nextPage = () => {
         if (currentPage * rowsPerPage < parsedData.length) {
             setCurrentPage(currentPage + 1);
@@ -136,26 +130,30 @@ const AdminPage = () => {
             <h3>Data from Excel (Matched with Predefined Columns)</h3>
             {parsedData.length > 0 && (
                 <div>
-                    <thead>
-                        <tr>
-                            {predefinedColumns.map((col, index) => (
-                                <th key={index} className='px-[9.5px]'>{col}</th>
-                            ))}
-                        </tr>
-                    </thead>
+                    {/* Column Headers */}
+                    <div className="flex border-b-2 border-black bg-gray-200">
+                        {predefinedColumns.map((col, index) => (
+                            <div key={index} className="flex-1 px-[10px] py-[5px] text-center font-bold">
+                                {col}
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Virtualized List */}
                     <div style={{ height: '400px', width: '100%' }}>
                         <AutoSizer>
                             {({ height, width }) => (
                                 <List
                                     height={height}
                                     width={width}
-                                    rowHeight={40} // Adjust row height as needed
+                                    rowHeight={40}
                                     rowCount={currentRows.length}
                                     rowRenderer={rowRenderer}
                                 />
                             )}
                         </AutoSizer>
                     </div>
+
                     {/* Pagination Controls */}
                     <div className="pagination-controls">
                         <button onClick={prevPage} disabled={currentPage === 1}>

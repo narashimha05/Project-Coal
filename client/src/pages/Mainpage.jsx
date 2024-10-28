@@ -1,8 +1,10 @@
 import React from 'react'
-
+import AdminPage from './AdminPage'
 const Mainpage = () => {
   return (
-    <div>Mainpage</div>
+    <div>
+      <AdminPage />
+    </div>
   )
 }
 

@@ -2,27 +2,30 @@ const express = require('express');
 const router = express.Router();
 const Score = require('../models/Score');
 
-
 const columnWeights = {
-    'Column1': 0.3,
-    'Column2': 0.05,
-    'Column3': 0.1,
-    'Column4': 0.2,
-    'Column5': 0.05,
-    'Column6': 0.05,
-    'Column7': 0.1,
-    'Column8': 0.05,
-    'Column9': 0.05,
-    'Column10': 0.02,
-    'Column11': 0.02,
-    'Column12': 0.01,
-    'Column13': 0.05,
-    'Column14': 0.05,
-    'Column15': 0.02,
-    'Column16': 0.02,
-    'Column17': 0.01,
+    'EFR': 0.2,
+    'HRTVD': 0.15,
+    'MET': 0.12,
+    'ROT': 0.1,
+    'ES': 0.08,
+    'OP': 0.07,
+    'EAPP': 0.06,
+    'OT': 0.05,
+    'CBP': 0.04,
+    'RP': 0.04,
+    'WBVS': 0.03,
+    'FBP': 0.03,
+    'CT': 0.03,
+    'TKPH': 0.88,
+    'LS': 0.04,
+    'STB': 0.04,
 };
 
+// Columns that should yield a negative final value
+const negativeColumns = ['EFR', 'ROT', 'ES', 'EAPP', 'OP', 'OT', 'WBVS', 'FBP', 'CT', 'MET', 'TKPH', 'CBP'];
+
+// Columns that should yield a positive final value
+const positiveColumns = ['RP', 'HRTVD', 'ES', 'LS', 'STB'];
 
 const calculateScore = (fileData, excelColumns, predefinedColumns, columnWeights) => {
     let totalScore = 0;
@@ -34,13 +37,26 @@ const calculateScore = (fileData, excelColumns, predefinedColumns, columnWeights
             const colValues = fileData.map((row) => parseFloat(row[colIndex] || 0));
 
             // Calculate column mean
-            const colMean = colValues.reduce((acc, val) => acc + val, 0) / colValues.length;
+            let colMean = colValues.reduce((acc, val) => acc + val, 0) / colValues.length;
+
+            // Special handling for STB: subtract 30 from mean before applying weight
+            if (col === 'STB') {
+                colMean -= 30;
+            }
 
             // Get column weight
             const weight = columnWeights[col] || 0;
+            let weightedValue = colMean * weight;
+
+            // Apply sign based on column type
+            if (negativeColumns.includes(col)) {
+                weightedValue = -Math.abs(weightedValue);
+            } else if (positiveColumns.includes(col)) {
+                weightedValue = Math.abs(weightedValue);
+            }
 
             // Add to total score
-            totalScore += colMean * weight;
+            totalScore += weightedValue;
         }
     });
 
@@ -48,17 +64,16 @@ const calculateScore = (fileData, excelColumns, predefinedColumns, columnWeights
     return totalScore;
 };
 
-
-
 router.post('/upload', async (req, res) => {
     const { name, truckName, fileData, excelColumns } = req.body;
 
-    const predefinedColumns = ['Column1', 'Column2', 'Column3', 'Column4', 'Column5', 'Column6', 'Column7', 'Column8', 'Column9', 'Column10', 'Column11', 'Column12', 'Column13', 'Column14', 'Column15', 'Column16', 'Column17'];
+    const predefinedColumns = [
+        'EFR', 'HRTVD', 'MET', 'ROT', 'ES', 'OP', 'EAPP', 'OT', 'CBP', 
+        'RP', 'WBVS', 'FBP', 'CT', 'TKPH', 'ES', 'LS', 'STB'
+    ];
 
-    
     const score = calculateScore(fileData, excelColumns, predefinedColumns, columnWeights);
 
-    
     const newScore = new Score({
         name,
         truckName,
@@ -69,7 +84,6 @@ router.post('/upload', async (req, res) => {
 
     await newScore.save();
 
-   
     return res.json({ success: true, score });
 });
 
