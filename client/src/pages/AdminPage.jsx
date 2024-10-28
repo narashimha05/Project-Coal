@@ -15,7 +15,10 @@ const AdminPage = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [rowsPerPage] = useState(10); // Display 10 rows per page
 
-    const predefinedColumns = ['Column1', 'Column2', 'Column3', 'Column4', 'Column5', 'Column6', 'Column7', 'Column8', 'Column9', 'Column10', 'Column11', 'Column12'];
+    const predefinedColumns = [
+        'Column1', 'Column2', 'Column3', 'Column4', 'Column5', 'Column6', 'Column7', 'Column8', 'Column9', 
+        'Column10', 'Column11', 'Column12', 'Column13', 'Column14', 'Column15', 'Column16', 'Column17'
+    ];
 
     // Handle file upload and parse Excel file
     const handleFileChange = (e) => {
@@ -28,9 +31,9 @@ const AdminPage = () => {
             const sheet = workbook.Sheets[workbook.SheetNames[0]];
             const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1 });
 
-            // Get headers and rows from Excel
-            const fileHeaders = jsonData[0];
-            const rows = jsonData.slice(1);
+            // Get headers and rows from Excel, limiting to 17 columns
+            const fileHeaders = jsonData[0].slice(0, 17); // Only the first 17 columns
+            const rows = jsonData.slice(1).map(row => row.slice(0, 17)); // Only the first 17 columns for each row
 
             setExcelColumns(fileHeaders);
             setParsedData(rows);
@@ -130,15 +133,13 @@ const AdminPage = () => {
                 <input type="file" onChange={handleFileChange} />
             </div>
 
-            
-
             <h3>Data from Excel (Matched with Predefined Columns)</h3>
             {parsedData.length > 0 && (
                 <div>
                     <thead>
                         <tr>
                             {predefinedColumns.map((col, index) => (
-                                <th key={index} className='px-[29px]'>{col}</th>
+                                <th key={index} className='px-[9.5px]'>{col}</th>
                             ))}
                         </tr>
                     </thead>

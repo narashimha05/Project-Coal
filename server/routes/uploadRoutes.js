@@ -16,6 +16,11 @@ const columnWeights = {
     'Column10': 0.02,
     'Column11': 0.02,
     'Column12': 0.01,
+    'Column13': 0.05,
+    'Column14': 0.05,
+    'Column15': 0.02,
+    'Column16': 0.02,
+    'Column17': 0.01,
 };
 
 
@@ -48,7 +53,7 @@ const calculateScore = (fileData, excelColumns, predefinedColumns, columnWeights
 router.post('/upload', async (req, res) => {
     const { name, truckName, fileData, excelColumns } = req.body;
 
-    const predefinedColumns = ['Column1', 'Column2', 'Column3', 'Column4', 'Column5', 'Column6', 'Column7', 'Column8', 'Column9', 'Column10', 'Column11', 'Column12'];
+    const predefinedColumns = ['Column1', 'Column2', 'Column3', 'Column4', 'Column5', 'Column6', 'Column7', 'Column8', 'Column9', 'Column10', 'Column11', 'Column12', 'Column13', 'Column14', 'Column15', 'Column16', 'Column17'];
 
     
     const score = calculateScore(fileData, excelColumns, predefinedColumns, columnWeights);
