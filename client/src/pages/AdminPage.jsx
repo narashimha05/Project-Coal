@@ -9,9 +9,11 @@ const AdminPage = () => {
     const [truckName, setTruckName] = useState('');
     const [mechanicalData, setMechanicalData] = useState([]);
     const [behavioralData, setBehavioralData] = useState([]);
+    const [dumperData, setDumperData] = useState([]);
     const [leaderboard, setLeaderboard] = useState([]);
     const [currentMechanicalPage, setCurrentMechanicalPage] = useState(1);
     const [currentBehavioralPage, setCurrentBehavioralPage] = useState(1);
+    const [currentDumperPage, setCurrentDumperPage] = useState(1);
     const rowsPerPage = 10;
 
     const mechanicalPredefinedColumns = [
@@ -19,7 +21,9 @@ const AdminPage = () => {
         'RP', 'WBVS', 'FBP', 'CT'
     ];
 
-    const behavioralPredefinedColumns = ['TKPH', 'ES', 'LS', 'STB'];
+    const behavioralPredefinedColumns = ['ES', 'LS', 'STB'];
+
+    const dumperPredefinedColumns = ['TTH','TL','HT','ET'];
 
     const handleFileChange = (e, type) => {
         const file = e.target.files[0];
@@ -34,7 +38,11 @@ const AdminPage = () => {
             const fileHeaders = jsonData[0];
             const rows = jsonData.slice(1);
 
-            const predefinedColumns = type === 'mechanical' ? mechanicalPredefinedColumns : behavioralPredefinedColumns;
+            const predefinedColumns = 
+    type === 'mechanical' ? mechanicalPredefinedColumns :
+    type === 'behavioral' ? behavioralPredefinedColumns :
+    dumperPredefinedColumns;
+
 
             // Map the data to predefined columns, filling missing values with zero
             const matchedData = rows.map((row) => {
@@ -46,9 +54,12 @@ const AdminPage = () => {
 
             if (type === 'mechanical') {
                 setMechanicalData(matchedData);
-            } else {
+            } else if (type === 'behavioral') {
                 setBehavioralData(matchedData);
+            } else {
+                setDumperData(matchedData); // Assuming setDumperCycleData is defined for dumper cycle state
             }
+            
         };
 
         reader.readAsArrayBuffer(file);
@@ -56,13 +67,15 @@ const AdminPage = () => {
 
     const handleSubmit = async () => {
         try {
-            const response = await axios.post('https://project-coal-backend.onrender.com/api/upload', {
+            const response = await axios.post('http://localhost:5000/api/upload', {
                 name,
                 truckName,
                 mechanicalData,
                 behavioralData,
+                dumperData,
                 mechanicalColumns: mechanicalPredefinedColumns,
-                behavioralColumns: behavioralPredefinedColumns
+                behavioralColumns: behavioralPredefinedColumns,
+                dumperColumns: dumperPredefinedColumns
             }, {
                 headers: { 'Access-Control-Allow-Origin': '*' }
             });
@@ -78,7 +91,7 @@ const AdminPage = () => {
 
     const fetchLeaderboard = async () => {
         try {
-            const response = await axios.get('https://project-coal-backend.onrender.com/api/leaderboard');
+            const response = await axios.get('http://localhost:5000/api/leaderboard');
             setLeaderboard(response.data);
         } catch (error) {
             console.error('Error fetching leaderboard:', error);
@@ -125,6 +138,24 @@ const AdminPage = () => {
         }
     };
 
+    // Pagination control functions for Dumper data
+    const paginatedDumperData = dumperData.slice(
+        (currentDumperPage - 1) * rowsPerPage,
+        currentDumperPage * rowsPerPage
+    );
+
+    const nextDumperPage = () => {
+        if (currentDumperPage * rowsPerPage < dumperData.length) {
+            setCurrentDumperPage(currentDumperPage + 1);
+        }
+    };
+
+    const prevDumperPage = () => {
+        if (currentDumperPage > 1) {
+            setCurrentDumperPage(currentDumperPage - 1);
+        }
+    };
+
     const rowRenderer = (data) => ({ index, key, style }) => (
         <div key={key} style={style} className="flex border-b-2 border-b-black">
             {data[index].map((cell, colIndex) => (
@@ -149,7 +180,7 @@ const AdminPage = () => {
     />
     <input
         type="text"
-        placeholder="Truck Name"
+        placeholder="Operator Name"
         value={truckName}
         onChange={(e) => setTruckName(e.target.value)}
         className="w-full mb-4 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -167,6 +198,14 @@ const AdminPage = () => {
         <input
             type="file"
             onChange={(e) => handleFileChange(e, 'behavioral')}
+            className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200"
+        />
+    </div>
+    <div className="mb-4">
+        <label className="block mb-2 text-gray-700 font-semibold">Dumper File</label>
+        <input
+            type="file"
+            onChange={(e) => handleFileChange(e, 'dumper')}
             className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200"
         />
     </div>
@@ -246,60 +285,77 @@ const AdminPage = () => {
                     </div>
                 </div>
             )}
+            {/*  */}
+            <h2 class="text-4xl font-extrabold text-black">Dumper Data</h2>
+            {dumperData.length > 0 && (
+                <div className='border-4 border-black'>
+                    <div className="flex border-b-2 border-black bg-gray-200">
+                        {dumperPredefinedColumns.map((col, index) => (
+                            <div key={index} className="flex-1 px-[10px] py-[5px] text-center font-bold">
+                                {col}
+                            </div>
+                        ))}
+                    </div>
+
+                    <div style={{ height: '400px', width: '100%' }}>
+                        <AutoSizer>
+                            {({ height, width }) => (
+                                <List
+                                    height={height}
+                                    width={width}
+                                    rowHeight={40}
+                                    rowCount={paginatedDumperData.length}
+                                    rowRenderer={rowRenderer(paginatedDumperData)}
+                                />
+                            )}
+                        </AutoSizer>
+                    </div>
+
+                    <div className="pagination-controls flex mt-2 items-center justify-center mb-2">
+                        <button onClick={prevDumperPage} disabled={currentDumperPage === 1} class="flex items
+                        -center justify-center px-3 h-8 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">
+                            Previous
+                        </button>
+                        <span className='px-4 text-blue-700'>Page {currentDumperPage}</span>
+                        <button onClick={nextDumperPage} disabled={currentDumperPage * rowsPerPage >= dumperData.length} class="flex items-center justify-center px-3 h-8 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">
+                            Next
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/*  */}
 
             <button onClick={handleSubmit} class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800 mt-4">Calculate Combined Score</button>
 
             <div className="leaderboard">
       
-<h1 class="text-3xl font-extrabold text-black mt-8 mb-2">Leaderboard</h1>
-
-      <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
-      <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
-        <thead class="text-md text-gray-700 uppercase dark:text-gray-400 ">
-          <tr>
-            <th scope="col" class="px-6 py-3 bg-gray-50 dark:bg-gray-800">Name</th>
-            <th scope="col" class="px-6 py-3">Truck Name</th>
-            <th scope="col" class="px-6 py-3 bg-gray-50 dark:bg-gray-800">Score</th>
-          </tr>
-        </thead>
-        <tbody>
-          {leaderboard.map((entry, index) => (
-            <tr key={index} class="border-b border-gray-200 dark:border-gray-700 text-sm">
-              <td class="px-6 py-4 bg-gray-50 dark:bg-gray-800">{entry.name}</td>
-              <td class="px-6 py-4">{entry.truckName}</td>
-              <td class="px-6 py-4 bg-gray-50 dark:bg-gray-800">{entry.score}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      </div>
-    </div>
-
-
-{/* <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
-        <thead class="text-xs text-gray-700 uppercase dark:text-gray-400">
-            <tr>
-                <th scope="col" class="px-6 py-3 bg-gray-50 dark:bg-gray-800">
-                    Product name
-                </th>
-                <th scope="col" class="px-6 py-3">
-                    Color
-                </th>
-                <th scope="col" class="px-6 py-3 bg-gray-50 dark:bg-gray-800">
-                    Category
-                </th>
-            </tr>
-        </thead>
-        <tbody>
-                    {leaderboard.map((entry, index) => (
-                        <tr class="border-b border-gray-200 dark:border-gray-700" key={index}>
-                        <td class="px-6 py-4 text-black">{entry.name}</td>
-                        <td class="px-6 py-4 bg-gray-50 dark:bg-gray-800">{entry.truckName}</td>
-                        <td class="px-6 py-4">{entry.score}</td>
-                    </tr>
-                ))}
-        </tbody>
-        </table> */}
+      <h1 class="text-3xl font-extrabold text-black mt-8 mb-2">Leaderboard</h1>
+      
+            <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
+            <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
+              <thead class="text-md text-gray-700 uppercase dark:text-gray-400 ">
+                <tr>
+                <th scope="col" class="px-6 py-3 bg-gray-50 dark:bg-gray-800">Serial Number</th>
+                  <th scope="col" class="px-6 py-4">Name</th>
+                  <th scope="col" class="px-6 py-3 bg-gray-50 dark:bg-gray-800">Operator Name</th>
+                  <th scope="col" class="px-6 py-4">Score</th>
+                </tr>
+              </thead>
+                    <tbody>
+              {leaderboard.map((entry, index) => (
+                <tr key={index} className="border-b border-gray-200 dark:border-gray-700 text-sm">
+                  <td className="px-6 py-4 bg-gray-50 dark:bg-gray-800">{index + 1}</td> {/* Serial Number */}
+                  <td className="px-6 py-4">{entry.name}</td>
+                  <td className="px-6 py-4 bg-gray-50 dark:bg-gray-800">{entry.truckName}</td>
+                  <td className="px-6 py-4">{entry.score}</td>
+                </tr>
+              ))}
+            </tbody>
+      
+            </table>
+            </div>
+          </div>
         </div>
     );
 };

@@ -4,22 +4,9 @@ const Score = require('../models/Score');
 
 // Define column weights for mechanical and behavioral data
 const columnWeights = {
-    'EFR': 0.2,
-    'HRTVD': 0.15,
-    'MET': 0.12,
-    'ROT': 0.1,
-    'ES': 0.08,
-    'OP': 0.07,
-    'EAPP': 0.06,
-    'OT': 0.05,
-    'CBP': 0.04,
-    'RP': 0.04,
-    'WBVS': 0.03,
-    'FBP': 0.03,
-    'CT': 0.03,
-    'TKPH': 0.88,
-    'LS': 0.04,
-    'STB': 0.04,
+    'EFR': 0.2, 'HRTVD': 0.15, 'MET': 0.12, 'ROT': 0.1, 'ES': 0.08, 
+    'OP': 0.07, 'EAPP': 0.06, 'OT': 0.05, 'CBP': 0.04, 'RP': 0.04, 
+    'WBVS': 0.03, 'FBP': 0.03, 'CT': 0.03, 'TKPH': 0.88, 'LS': 0.04, 'STB': 0.04,
 };
 
 // Columns yielding a negative or positive impact on the score
@@ -56,22 +43,52 @@ const calculateScore = (fileData, excelColumns, predefinedColumns, columnWeights
     return totalScore;
 };
 
-router.post('/upload', async (req, res) => {
-    const { name, truckName, mechanicalData, mechanicalColumns, behavioralData, behavioralColumns } = req.body;
+// Calculate the dumper cycle score based on the formula (TTH * TL) / (HT + ET)
+const calculateDumperScore = (dumperData, dumperColumns) => {
+    const TTHIndex = dumperColumns.indexOf('TTH');
+    const TLIndex = dumperColumns.indexOf('TL');
+    const HTIndex = dumperColumns.indexOf('HT');
+    const ETIndex = dumperColumns.indexOf('ET');
 
-    // Define column sets for mechanical and behavioral files
+    const rowResults = dumperData.map(row => {
+        const TTH = parseFloat(row[TTHIndex] || 0);
+        const TL = parseFloat(row[TLIndex] || 0);
+        const HT = parseFloat(row[HTIndex] || 0);
+        const ET = parseFloat(row[ETIndex] || 0);
+
+        return HT + ET !== 0 ? (TTH * TL) / (HT + ET) : 0;
+    });
+
+    const meanRowResult = rowResults.reduce((acc, val) => acc + val, 0) / rowResults.length;
+    return meanRowResult * -0.88;
+};
+
+router.post('/upload', async (req, res) => {
+    const { name, truckName, mechanicalData = [], mechanicalColumns = [], behavioralData = [], behavioralColumns = [], dumperData = [], dumperColumns = [] } = req.body;
+
+    // Define column sets for mechanical, behavioral, and dumper files
     const mechanicalPredefinedColumns = [
         'EFR', 'HRTVD', 'MET', 'ROT', 'ES', 'OP', 'EAPP', 'OT', 'CBP', 
         'RP', 'WBVS', 'FBP', 'CT'
     ];
-    const behavioralPredefinedColumns = ['TKPH', 'ES', 'LS', 'STB'];
+    const behavioralPredefinedColumns = ['ES', 'LS', 'STB'];
+    const dumperPredefinedColumns = ['TTH', 'TL', 'HT', 'ET'];
 
-    // Calculate scores separately for mechanical and behavioral data
-    const mechanicalScore = calculateScore(mechanicalData, mechanicalColumns, mechanicalPredefinedColumns, columnWeights);
-    const behavioralScore = calculateScore(behavioralData, behavioralColumns, behavioralPredefinedColumns, columnWeights);
+    // Calculate scores conditionally
+    const mechanicalScore = mechanicalData.length > 0 
+        ? calculateScore(mechanicalData, mechanicalColumns, mechanicalPredefinedColumns, columnWeights) 
+        : 0;
 
-    // Combine the two scores
-    const totalScore = mechanicalScore + behavioralScore;
+    const behavioralScore = behavioralData.length > 0 
+        ? calculateScore(behavioralData, behavioralColumns, behavioralPredefinedColumns, columnWeights) 
+        : 0;
+
+    const dumperScore = dumperData.length > 0 
+        ? calculateDumperScore(dumperData, dumperColumns) 
+        : 0;
+
+    // Combine the scores
+    const totalScore = mechanicalScore + behavioralScore + dumperScore;
 
     // Save the combined score to the database
     const newScore = new Score({
@@ -79,8 +96,10 @@ router.post('/upload', async (req, res) => {
         truckName,
         mechanicalColumns,
         behavioralColumns,
+        dumperColumns,
         mechanicalData,
         behavioralData,
+        dumperData,
         score: totalScore,
     });
 
