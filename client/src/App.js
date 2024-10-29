@@ -5,6 +5,7 @@ import Signin from './pages/Signin';
 import Signup from './pages/Signup';
 import Mainpage from './pages/Mainpage';
 import AdminPage from './pages/AdminPage';
+
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, loading } = React.useContext(AuthContext);
 
@@ -12,28 +13,30 @@ const ProtectedRoute = ({ children }) => {
     return <div>Loading...</div>;
   }
 
-  return isAuthenticated ? children : <Navigate to="/user/signup" />;
+  return isAuthenticated ? children : <Navigate to="/user/signin" />;
 };
 
 function App() {
   return (
-  
-    <>
-    
-    {/* <AuthProvider>
+    <AuthProvider>
       <Router>
         <Routes>
-          <Route path="/" element={<ProtectedRoute><Mainpage /></ProtectedRoute>} />
+          <Route path="/" element={<Mainpage />} />
+
           <Route path="/user/signin" element={<Signin />} />
           <Route path="/user/signup" element={<Signup />} />
-          <Route path="/mainpage" element={<Mainpage />} />
+
+          <Route
+            path="/admin"
+            element={
+              
+                <AdminPage />
+            
+            }
+          />
         </Routes>
       </Router>
-    </AuthProvider> */}
-    <AdminPage />
-    <div className='h-16'></div>
-    
-    </>
+    </AuthProvider>
   );
 }
 

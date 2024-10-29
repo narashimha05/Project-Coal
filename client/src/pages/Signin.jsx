@@ -16,7 +16,7 @@ const Signin = () => {
       });
 
       localStorage.setItem('token', response.data.token);
-      navigate('/mainpage');
+      navigate('/admin');
     } catch (error) {
       console.error('Error signing in', error);
     }

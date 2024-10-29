@@ -7,18 +7,21 @@ import 'react-virtualized/styles.css';
 const AdminPage = () => {
     const [name, setName] = useState('');
     const [truckName, setTruckName] = useState('');
-    const [excelColumns, setExcelColumns] = useState([]);
-    const [parsedData, setParsedData] = useState([]);
+    const [mechanicalData, setMechanicalData] = useState([]);
+    const [behavioralData, setBehavioralData] = useState([]);
     const [leaderboard, setLeaderboard] = useState([]);
-    const [currentPage, setCurrentPage] = useState(1);
-    const [rowsPerPage] = useState(10);
+    const [currentMechanicalPage, setCurrentMechanicalPage] = useState(1);
+    const [currentBehavioralPage, setCurrentBehavioralPage] = useState(1);
+    const rowsPerPage = 10;
 
-    const predefinedColumns = [
+    const mechanicalPredefinedColumns = [
         'EFR', 'HRTVD', 'MET', 'ROT', 'ES', 'OP', 'EAPP', 'OT', 'CBP', 
-        'RP', 'WBVS', 'FBP', 'CT', 'TKPH', 'ES', 'LS', 'STB'
+        'RP', 'WBVS', 'FBP', 'CT'
     ];
 
-    const handleFileChange = (e) => {
+    const behavioralPredefinedColumns = ['TKPH', 'ES', 'LS', 'STB'];
+
+    const handleFileChange = (e, type) => {
         const file = e.target.files[0];
         const reader = new FileReader();
 
@@ -28,23 +31,27 @@ const AdminPage = () => {
             const sheet = workbook.Sheets[workbook.SheetNames[0]];
             const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1 });
 
-            const fileHeaders = jsonData[0].slice(0, 17);
-            const rows = jsonData.slice(1).map(row => row.slice(0, 17));
+            const fileHeaders = jsonData[0];
+            const rows = jsonData.slice(1);
 
-            setExcelColumns(fileHeaders);
-            setParsedData(rows);
+            const predefinedColumns = type === 'mechanical' ? mechanicalPredefinedColumns : behavioralPredefinedColumns;
+
+            // Map the data to predefined columns, filling missing values with zero
+            const matchedData = rows.map((row) => {
+                return predefinedColumns.map((col) => {
+                    const colIndex = fileHeaders.indexOf(col);
+                    return colIndex !== -1 && row[colIndex] !== undefined ? row[colIndex] : 0;
+                });
+            });
+
+            if (type === 'mechanical') {
+                setMechanicalData(matchedData);
+            } else {
+                setBehavioralData(matchedData);
+            }
         };
 
         reader.readAsArrayBuffer(file);
-    };
-
-    const getColumnData = (columnName) => {
-        const colIndex = excelColumns.indexOf(columnName);
-        if (colIndex !== -1) {
-            return parsedData.map((row) => row[colIndex] || 0);
-        } else {
-            return Array(parsedData.length).fill(0);
-        }
     };
 
     const handleSubmit = async () => {
@@ -52,8 +59,10 @@ const AdminPage = () => {
             const response = await axios.post('http://localhost:5000/api/upload', {
                 name,
                 truckName,
-                fileData: parsedData,
-                excelColumns
+                mechanicalData,
+                behavioralData,
+                mechanicalColumns: mechanicalPredefinedColumns,
+                behavioralColumns: behavioralPredefinedColumns
             });
 
             if (response.data.success) {
@@ -78,34 +87,51 @@ const AdminPage = () => {
         fetchLeaderboard();
     }, []);
 
-    const indexOfLastRow = currentPage * rowsPerPage;
-    const indexOfFirstRow = indexOfLastRow - rowsPerPage;
-    const currentRows = parsedData.slice(indexOfFirstRow, indexOfLastRow);
-
-    const rowRenderer = ({ index, key, style }) => (
-        <div key={key} style={style} className="flex border-b-2 border-b-black">
-            {predefinedColumns.map((col, colIndex) => {
-                const columnData = getColumnData(col);
-                return (
-                    <div key={colIndex} className="flex-1 p-[5px] text-center">
-                        {columnData[indexOfFirstRow + index]}
-                    </div>
-                );
-            })}
-        </div>
+    // Pagination control functions for mechanical data
+    const paginatedMechanicalData = mechanicalData.slice(
+        (currentMechanicalPage - 1) * rowsPerPage,
+        currentMechanicalPage * rowsPerPage
     );
 
-    const nextPage = () => {
-        if (currentPage * rowsPerPage < parsedData.length) {
-            setCurrentPage(currentPage + 1);
+    const nextMechanicalPage = () => {
+        if (currentMechanicalPage * rowsPerPage < mechanicalData.length) {
+            setCurrentMechanicalPage(currentMechanicalPage + 1);
         }
     };
 
-    const prevPage = () => {
-        if (currentPage > 1) {
-            setCurrentPage(currentPage - 1);
+    const prevMechanicalPage = () => {
+        if (currentMechanicalPage > 1) {
+            setCurrentMechanicalPage(currentMechanicalPage - 1);
         }
     };
+
+    // Pagination control functions for behavioral data
+    const paginatedBehavioralData = behavioralData.slice(
+        (currentBehavioralPage - 1) * rowsPerPage,
+        currentBehavioralPage * rowsPerPage
+    );
+
+    const nextBehavioralPage = () => {
+        if (currentBehavioralPage * rowsPerPage < behavioralData.length) {
+            setCurrentBehavioralPage(currentBehavioralPage + 1);
+        }
+    };
+
+    const prevBehavioralPage = () => {
+        if (currentBehavioralPage > 1) {
+            setCurrentBehavioralPage(currentBehavioralPage - 1);
+        }
+    };
+
+    const rowRenderer = (data) => ({ index, key, style }) => (
+        <div key={key} style={style} className="flex border-b-2 border-b-black">
+            {data[index].map((cell, colIndex) => (
+                <div key={colIndex} className="flex-1 p-[5px] text-center">
+                    {cell || 0}
+                </div>
+            ))}
+        </div>
+    );
 
     return (
         <div>
@@ -124,22 +150,27 @@ const AdminPage = () => {
                     value={truckName}
                     onChange={(e) => setTruckName(e.target.value)}
                 />
-                <input type="file" onChange={handleFileChange} />
+                <div>
+                    <label>Mechanical File</label>
+                    <input type="file" onChange={(e) => handleFileChange(e, 'mechanical')} />
+                </div>
+                <div>
+                    <label>Behavioral File</label>
+                    <input type="file" onChange={(e) => handleFileChange(e, 'behavioral')} />
+                </div>
             </div>
 
-            <h3>Data from Excel (Matched with Predefined Columns)</h3>
-            {parsedData.length > 0 && (
+            <h3>Mechanical Data (Matched with Predefined Columns)</h3>
+            {mechanicalData.length > 0 && (
                 <div>
-                    {/* Column Headers */}
                     <div className="flex border-b-2 border-black bg-gray-200">
-                        {predefinedColumns.map((col, index) => (
+                        {mechanicalPredefinedColumns.map((col, index) => (
                             <div key={index} className="flex-1 px-[10px] py-[5px] text-center font-bold">
                                 {col}
                             </div>
                         ))}
                     </div>
 
-                    {/* Virtualized List */}
                     <div style={{ height: '400px', width: '100%' }}>
                         <AutoSizer>
                             {({ height, width }) => (
@@ -147,27 +178,63 @@ const AdminPage = () => {
                                     height={height}
                                     width={width}
                                     rowHeight={40}
-                                    rowCount={currentRows.length}
-                                    rowRenderer={rowRenderer}
+                                    rowCount={paginatedMechanicalData.length}
+                                    rowRenderer={rowRenderer(paginatedMechanicalData)}
                                 />
                             )}
                         </AutoSizer>
                     </div>
 
-                    {/* Pagination Controls */}
                     <div className="pagination-controls">
-                        <button onClick={prevPage} disabled={currentPage === 1}>
+                        <button onClick={prevMechanicalPage} disabled={currentMechanicalPage === 1}>
                             Previous
                         </button>
-                        <span>Page {currentPage}</span>
-                        <button onClick={nextPage} disabled={currentPage * rowsPerPage >= parsedData.length}>
+                        <span>Page {currentMechanicalPage}</span>
+                        <button onClick={nextMechanicalPage} disabled={currentMechanicalPage * rowsPerPage >= mechanicalData.length}>
                             Next
                         </button>
                     </div>
                 </div>
             )}
 
-            <button onClick={handleSubmit}>Calculate Score</button>
+            <h3>Behavioral Data (Matched with Predefined Columns)</h3>
+            {behavioralData.length > 0 && (
+                <div>
+                    <div className="flex border-b-2 border-black bg-gray-200">
+                        {behavioralPredefinedColumns.map((col, index) => (
+                            <div key={index} className="flex-1 px-[10px] py-[5px] text-center font-bold">
+                                {col}
+                            </div>
+                        ))}
+                    </div>
+
+                    <div style={{ height: '400px', width: '100%' }}>
+                        <AutoSizer>
+                            {({ height, width }) => (
+                                <List
+                                    height={height}
+                                    width={width}
+                                    rowHeight={40}
+                                    rowCount={paginatedBehavioralData.length}
+                                    rowRenderer={rowRenderer(paginatedBehavioralData)}
+                                />
+                            )}
+                        </AutoSizer>
+                    </div>
+
+                    <div className="pagination-controls">
+                        <button onClick={prevBehavioralPage} disabled={currentBehavioralPage === 1}>
+                            Previous
+                        </button>
+                        <span>Page {currentBehavioralPage}</span>
+                        <button onClick={nextBehavioralPage} disabled={currentBehavioralPage * rowsPerPage >= behavioralData.length}>
+                            Next
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            <button onClick={handleSubmit}>Calculate Combined Score</button>
 
             <h3>Leaderboard</h3>
             <table border="1">

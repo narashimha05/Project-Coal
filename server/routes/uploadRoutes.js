@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Score = require('../models/Score');
 
+// Define column weights for mechanical and behavioral data
 const columnWeights = {
     'EFR': 0.2,
     'HRTVD': 0.15,
@@ -21,70 +22,71 @@ const columnWeights = {
     'STB': 0.04,
 };
 
-// Columns that should yield a negative final value
+// Columns yielding a negative or positive impact on the score
 const negativeColumns = ['EFR', 'ROT', 'ES', 'EAPP', 'OP', 'OT', 'WBVS', 'FBP', 'CT', 'MET', 'TKPH', 'CBP'];
-
-// Columns that should yield a positive final value
 const positiveColumns = ['RP', 'HRTVD', 'ES', 'LS', 'STB'];
 
+// Calculate the score for a given dataset (mechanical or behavioral)
 const calculateScore = (fileData, excelColumns, predefinedColumns, columnWeights) => {
     let totalScore = 0;
 
     predefinedColumns.forEach((col) => {
-        const colIndex = excelColumns.indexOf(col);  // Find the index of the column in Excel data
+        const colIndex = excelColumns.indexOf(col);
         if (colIndex !== -1) {
-            // Extract column values
             const colValues = fileData.map((row) => parseFloat(row[colIndex] || 0));
-
-            // Calculate column mean
             let colMean = colValues.reduce((acc, val) => acc + val, 0) / colValues.length;
 
-            // Special handling for STB: subtract 30 from mean before applying weight
             if (col === 'STB') {
                 colMean -= 30;
             }
 
-            // Get column weight
             const weight = columnWeights[col] || 0;
             let weightedValue = colMean * weight;
 
-            // Apply sign based on column type
             if (negativeColumns.includes(col)) {
                 weightedValue = -Math.abs(weightedValue);
             } else if (positiveColumns.includes(col)) {
                 weightedValue = Math.abs(weightedValue);
             }
 
-            // Add to total score
             totalScore += weightedValue;
         }
     });
 
-    console.log(`Total Score: ${totalScore}`);  // Log the final total score
     return totalScore;
 };
 
 router.post('/upload', async (req, res) => {
-    const { name, truckName, fileData, excelColumns } = req.body;
+    const { name, truckName, mechanicalData, mechanicalColumns, behavioralData, behavioralColumns } = req.body;
 
-    const predefinedColumns = [
+    // Define column sets for mechanical and behavioral files
+    const mechanicalPredefinedColumns = [
         'EFR', 'HRTVD', 'MET', 'ROT', 'ES', 'OP', 'EAPP', 'OT', 'CBP', 
-        'RP', 'WBVS', 'FBP', 'CT', 'TKPH', 'ES', 'LS', 'STB'
+        'RP', 'WBVS', 'FBP', 'CT'
     ];
+    const behavioralPredefinedColumns = ['TKPH', 'ES', 'LS', 'STB'];
 
-    const score = calculateScore(fileData, excelColumns, predefinedColumns, columnWeights);
+    // Calculate scores separately for mechanical and behavioral data
+    const mechanicalScore = calculateScore(mechanicalData, mechanicalColumns, mechanicalPredefinedColumns, columnWeights);
+    const behavioralScore = calculateScore(behavioralData, behavioralColumns, behavioralPredefinedColumns, columnWeights);
 
+    // Combine the two scores
+    const totalScore = mechanicalScore + behavioralScore;
+
+    // Save the combined score to the database
     const newScore = new Score({
         name,
         truckName,
-        excelColumns,
-        fileData,
-        score,
+        mechanicalColumns,
+        behavioralColumns,
+        mechanicalData,
+        behavioralData,
+        score: totalScore,
     });
 
     await newScore.save();
 
-    return res.json({ success: true, score });
+    return res.json({ success: true, score: totalScore });
 });
 
 module.exports = router;
