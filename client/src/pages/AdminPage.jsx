@@ -63,6 +63,8 @@ const AdminPage = () => {
                 behavioralData,
                 mechanicalColumns: mechanicalPredefinedColumns,
                 behavioralColumns: behavioralPredefinedColumns
+            }, {
+                headers: { 'Access-Control-Allow-Origin': '*' }
             });
 
             if (response.data.success) {
@@ -135,7 +137,7 @@ const AdminPage = () => {
 
     return (
         <div>
-            <h1 class="mb-4 text-3xl font-extrabold text-gray-900 dark:text-white md:text-5xl lg:text-6xl"><span class="text-transparent bg-clip-text bg-gradient-to-r to-emerald-600 from-sky-400">Admin Page</span></h1>
+            <h1 class="mb-4 text-3xl font-extrabold text-gray-900 dark:text-white md:text-5xl lg:text-6xl text-c"><span class="text-transparent bg-clip-text bg-gradient-to-r to-emerald-600 from-sky-400">Admin Page</span></h1>
 
             <div className="p-6 bg-gray-100 rounded-lg shadow-lg max-w-md mx-auto">
     <input
@@ -171,9 +173,9 @@ const AdminPage = () => {
 </div>
 
 
-            <h3>Mechanical Data (Matched with Predefined Columns)</h3>
+<h2 class="text-4xl font-extrabold text-black">Mechanical Data</h2>
             {mechanicalData.length > 0 && (
-                <div>
+                <div className='border-4 border-black'>
                     <div className="flex border-b-2 border-black bg-gray-200">
                         {mechanicalPredefinedColumns.map((col, index) => (
                             <div key={index} className="flex-1 px-[10px] py-[5px] text-center font-bold">
@@ -196,21 +198,21 @@ const AdminPage = () => {
                         </AutoSizer>
                     </div>
 
-                    <div className="pagination-controls">
-                        <button onClick={prevMechanicalPage} disabled={currentMechanicalPage === 1}>
+                    <div className="pagination-controls flex mt-2 items-center justify-center mb-2">
+                        <button onClick={prevMechanicalPage} disabled={currentMechanicalPage === 1} class="flex items-center justify-center px-3 h-8 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">
                             Previous
                         </button>
-                        <span>Page {currentMechanicalPage}</span>
-                        <button onClick={nextMechanicalPage} disabled={currentMechanicalPage * rowsPerPage >= mechanicalData.length}>
+                        <span className='px-4 text-blue-700'>Page {currentMechanicalPage}</span>
+                        <button onClick={nextMechanicalPage} disabled={currentMechanicalPage * rowsPerPage >= mechanicalData.length} class="flex items-center justify-center px-3 h-8 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">
                             Next
                         </button>
                     </div>
                 </div>
             )}
 
-            <h3>Behavioral Data (Matched with Predefined Columns)</h3>
+<h2 class="text-4xl font-extrabold text-black">Behavioural Data</h2>
             {behavioralData.length > 0 && (
-                <div>
+                <div className='border-4 border-black'>
                     <div className="flex border-b-2 border-black bg-gray-200">
                         {behavioralPredefinedColumns.map((col, index) => (
                             <div key={index} className="flex-1 px-[10px] py-[5px] text-center font-bold">
@@ -233,19 +235,19 @@ const AdminPage = () => {
                         </AutoSizer>
                     </div>
 
-                    <div className="pagination-controls">
-                        <button onClick={prevBehavioralPage} disabled={currentBehavioralPage === 1}>
+                    <div className="pagination-controls flex mt-2 items-center justify-center mb-2">
+                        <button onClick={prevBehavioralPage} disabled={currentBehavioralPage === 1} class="flex items-center justify-center px-3 h-8 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white" >
                             Previous
                         </button>
-                        <span>Page {currentBehavioralPage}</span>
-                        <button onClick={nextBehavioralPage} disabled={currentBehavioralPage * rowsPerPage >= behavioralData.length}>
+                        <span className='px-4 text-blue-700'>Page {currentBehavioralPage}</span>
+                        <button onClick={nextBehavioralPage} disabled={currentBehavioralPage * rowsPerPage >= behavioralData.length} class="flex items-center justify-center px-3 h-8 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">
                             Next
                         </button>
                     </div>
                 </div>
             )}
 
-            <button onClick={handleSubmit}>Calculate Combined Score</button>
+            <button onClick={handleSubmit} class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800 mt-4">Calculate Combined Score</button>
 
             <div className="leaderboard">
       
