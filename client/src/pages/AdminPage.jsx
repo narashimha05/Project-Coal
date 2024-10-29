@@ -135,30 +135,41 @@ const AdminPage = () => {
 
     return (
         <div>
-            <h2>Admin Page</h2>
+            <h1 class="mb-4 text-3xl font-extrabold text-gray-900 dark:text-white md:text-5xl lg:text-6xl"><span class="text-transparent bg-clip-text bg-gradient-to-r to-emerald-600 from-sky-400">Admin Page</span></h1>
 
-            <div>
-                <input
-                    type="text"
-                    placeholder="Name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                />
-                <input
-                    type="text"
-                    placeholder="Truck Name"
-                    value={truckName}
-                    onChange={(e) => setTruckName(e.target.value)}
-                />
-                <div>
-                    <label>Mechanical File</label>
-                    <input type="file" onChange={(e) => handleFileChange(e, 'mechanical')} />
-                </div>
-                <div>
-                    <label>Behavioral File</label>
-                    <input type="file" onChange={(e) => handleFileChange(e, 'behavioral')} />
-                </div>
-            </div>
+            <div className="p-6 bg-gray-100 rounded-lg shadow-lg max-w-md mx-auto">
+    <input
+        type="text"
+        placeholder="Name"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        className="w-full mb-4 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+    />
+    <input
+        type="text"
+        placeholder="Truck Name"
+        value={truckName}
+        onChange={(e) => setTruckName(e.target.value)}
+        className="w-full mb-4 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+    />
+    <div className="mb-4">
+        <label className="block mb-2 text-gray-700 font-semibold">Mechanical File</label>
+        <input
+            type="file"
+            onChange={(e) => handleFileChange(e, 'mechanical')}
+            className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200"
+        />
+    </div>
+    <div className="mb-4">
+        <label className="block mb-2 text-gray-700 font-semibold">Behavioral File</label>
+        <input
+            type="file"
+            onChange={(e) => handleFileChange(e, 'behavioral')}
+            className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200"
+        />
+    </div>
+</div>
+
 
             <h3>Mechanical Data (Matched with Predefined Columns)</h3>
             {mechanicalData.length > 0 && (
@@ -236,25 +247,57 @@ const AdminPage = () => {
 
             <button onClick={handleSubmit}>Calculate Combined Score</button>
 
-            <h3>Leaderboard</h3>
-            <table border="1">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Truck Name</th>
-                        <th>Score</th>
-                    </tr>
-                </thead>
-                <tbody>
+            <div className="leaderboard">
+      
+<h1 class="text-3xl font-extrabold text-black mt-8 mb-2">Leaderboard</h1>
+
+      <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
+      <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
+        <thead class="text-md text-gray-700 uppercase dark:text-gray-400 ">
+          <tr>
+            <th scope="col" class="px-6 py-3 bg-gray-50 dark:bg-gray-800">Name</th>
+            <th scope="col" class="px-6 py-3">Truck Name</th>
+            <th scope="col" class="px-6 py-3 bg-gray-50 dark:bg-gray-800">Score</th>
+          </tr>
+        </thead>
+        <tbody>
+          {leaderboard.map((entry, index) => (
+            <tr key={index} class="border-b border-gray-200 dark:border-gray-700 text-sm">
+              <td class="px-6 py-4 bg-gray-50 dark:bg-gray-800">{entry.name}</td>
+              <td class="px-6 py-4">{entry.truckName}</td>
+              <td class="px-6 py-4 bg-gray-50 dark:bg-gray-800">{entry.score}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      </div>
+    </div>
+
+
+{/* <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
+        <thead class="text-xs text-gray-700 uppercase dark:text-gray-400">
+            <tr>
+                <th scope="col" class="px-6 py-3 bg-gray-50 dark:bg-gray-800">
+                    Product name
+                </th>
+                <th scope="col" class="px-6 py-3">
+                    Color
+                </th>
+                <th scope="col" class="px-6 py-3 bg-gray-50 dark:bg-gray-800">
+                    Category
+                </th>
+            </tr>
+        </thead>
+        <tbody>
                     {leaderboard.map((entry, index) => (
-                        <tr key={index}>
-                            <td>{entry.name}</td>
-                            <td>{entry.truckName}</td>
-                            <td>{entry.score}</td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
+                        <tr class="border-b border-gray-200 dark:border-gray-700" key={index}>
+                        <td class="px-6 py-4 text-black">{entry.name}</td>
+                        <td class="px-6 py-4 bg-gray-50 dark:bg-gray-800">{entry.truckName}</td>
+                        <td class="px-6 py-4">{entry.score}</td>
+                    </tr>
+                ))}
+        </tbody>
+        </table> */}
         </div>
     );
 };

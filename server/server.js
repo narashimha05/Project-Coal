@@ -12,7 +12,7 @@ app.use(cors());
 app.use(express.json({limit: '50mb'}));
 app.use(express.urlencoded({limit: '50mb'}));
 
-mongoose.connect("mongodb://localhost:27017/srinath")
+mongoose.connect("mongodb+srv://chinnarinarashimha:eXyOWGTPSQt67o9t@cluster0.dynoifc.mongodb.net/ProjectCoal")
     .then(() => console.log('MongoDB connected'))
     .catch((err) => console.log('MongoDB connection error: ', err));
 
