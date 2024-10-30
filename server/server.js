@@ -4,6 +4,9 @@ const cors = require("cors");
 const uploadRoutes = require("./routes/uploadRoutes");
 const leaderboardRoutes = require("./routes/leaderboardRoutes");
 const userRoutes = require("./routes/userRoutes");
+const mechanicalRoutes = require("./routes/MechanicalRoutes");
+const behavioralDumperRoutes = require("./routes/BehaviouralDumperRoutes");
+const combinedLeaderboardRoutes = require("./routes/combinedLeaderboardRoutes");
 const dotenv = require("dotenv");
 
 dotenv.config();
@@ -24,6 +27,9 @@ mongoose
 app.use("/api", userRoutes);
 app.use("/api", uploadRoutes);
 app.use("/api", leaderboardRoutes);
+app.use("/api", mechanicalRoutes);
+app.use("/api", behavioralDumperRoutes);
+app.use("/api", combinedLeaderboardRoutes);
 
 app.get("/", (req, res) => {
   res.send("Welcome to the backend!");

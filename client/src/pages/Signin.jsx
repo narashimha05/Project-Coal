@@ -82,7 +82,7 @@ const Signin = ({ API }) => {
               </button>
             </div>
           </form>
-          {/* <p className="mt-10 text-center text-sm text-gray-500">
+          <p className="mt-10 text-center text-sm text-gray-500">
             Not a member?{" "}
             <Link
               to="/user/signup"
@@ -90,7 +90,7 @@ const Signin = ({ API }) => {
             >
               Sign up
             </Link>
-          </p> */}
+          </p>
         </div>
       </div>
     </>

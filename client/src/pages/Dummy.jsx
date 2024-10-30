@@ -5,16 +5,12 @@ import { AutoSizer, List } from "react-virtualized";
 import "react-virtualized/styles.css";
 
 const AdminPage = ({ API }) => {
-  const [openTab, setOpenTab] = React.useState(1);
   const [name, setName] = useState("");
   const [truckName, setTruckName] = useState("");
   const [mechanicalData, setMechanicalData] = useState([]);
   const [behavioralData, setBehavioralData] = useState([]);
   const [dumperData, setDumperData] = useState([]);
   const [leaderboard, setLeaderboard] = useState([]);
-  const [combinedLeaderboard, setCombinedLeaderboard] = useState([]);
-  const [mechanicalLeaderboard, setMechanicalLeaderboard] = useState([]);
-  const [behaviouralDumperLeaderboard, setBehaviouralDumperLeaderboard] = useState([]);
   const [currentMechanicalPage, setCurrentMechanicalPage] = useState(1);
   const [currentBehavioralPage, setCurrentBehavioralPage] = useState(1);
   const [currentDumperPage, setCurrentDumperPage] = useState(1);
@@ -35,9 +31,9 @@ const AdminPage = ({ API }) => {
     "CT",
   ];
 
-  const behavioralPredefinedColumns = ["NAME","ES", "LS", "STB"];
+  const behavioralPredefinedColumns = ["ES", "LS", "STB"];
 
-  const dumperPredefinedColumns = ['NAME',"TTH", "TL", "HT", "ET"];
+  const dumperPredefinedColumns = ["TTH", "TL", "HT", "ET"];
 
   const handleFileChange = (e, type) => {
     const file = e.target.files[0];
@@ -109,56 +105,6 @@ const AdminPage = ({ API }) => {
     }
   };
 
-  const handleMechanicalSubmit = async () => {
-    try {
-      const response = await axios.post(
-        API + "api/mechanical",
-        {
-          name,
-          truckName,
-          mechanicalData,
-          mechanicalColumns: mechanicalPredefinedColumns,
-        },
-        {
-          headers: { "Access-Control-Allow-Origin": "*" },
-        }
-      );
-
-      if (response.data.success) {
-        alert(`Score calculated: ${response.data.score}`);
-        fetchLeaderboard();
-      }
-    } catch (error) {
-      console.error("Error uploading data:", error);
-    }
-  };
-
-  const handleBehaviouralSubmit = async () => {
-    try {
-      const response = await axios.post(
-        API + "api/behavioral",
-        {
-          behavioralData,
-          dumperData,
-          behavioralColumns: behavioralPredefinedColumns,
-          dumperColumns: dumperPredefinedColumns,
-        },
-        {
-          headers: { "Access-Control-Allow-Origin": "*" },
-        }
-      );
-
-      if (response.data.success) {
-        fetchLeaderboard();
-      }
-    } catch (error) {
-      console.error("Error uploading data:", error);
-    }
-  };
-
-
-
-
   const fetchLeaderboard = async () => {
     try {
       const response = await axios.get(API + "api/leaderboard");
@@ -171,45 +117,6 @@ const AdminPage = ({ API }) => {
   useEffect(() => {
     fetchLeaderboard();
   }, []);
-
-  const fetchMechanicalLeaderboard = async () => {
-    try {
-      const response = await axios.get(API + "api/mechanical");
-      setMechanicalLeaderboard(response.data);
-    } catch (error) {
-      console.error("Error fetching leaderboard:", error);
-    }
-  };
-
-  useEffect(() => {
-    fetchMechanicalLeaderboard();
-  },[]);
-
-  const fetchBehaviouralDumperLeaderboard = async () => {
-    try {
-      const response = await axios.get(API + "api/behavioral");
-      setBehaviouralDumperLeaderboard(response.data.leaderboard);
-    } catch (error) {
-      console.error("Error fetching leaderboard:", error);
-    }
-  };
-
-  useEffect(() => {
-    fetchBehaviouralDumperLeaderboard();
-  },[]);
-
-  const fetchCombinedLeaderboard = async () => {
-    try {
-      const response = await axios.get(API + "api/combinedleaderboard");
-      setCombinedLeaderboard(response.data);
-    } catch (error) {
-      console.error("Error fetching leaderboard:", error);
-    }
-  };
-
-  useEffect(() => {
-    fetchCombinedLeaderboard();
-  },[]);
 
   // Pagination control functions for mechanical data
   const paginatedMechanicalData = mechanicalData.slice(
@@ -286,82 +193,8 @@ const AdminPage = ({ API }) => {
         </span>
       </h1>
 
-
-      <div className="flex flex-wrap">
-        <div className="w-full">
-          <ul
-            className="flex mb-0 list-none flex-wrap pt-3 pb-4 flex-row"
-            role="tablist"
-          >
-            <li className="-mb-px mr-2 last:mr-0 flex-auto text-center">
-              <a
-                className={
-                  "text-xs font-bold uppercase px-5 py-3 shadow-lg rounded block leading-normal " +
-                  (openTab === 1
-                    ? "text-white bg-pink-600"
-                    : "text-pink-600 bg-white")
-                }
-                onClick={e => {
-                  e.preventDefault();
-                  setOpenTab(1);
-                }}
-                data-toggle="tab"
-                href="#link1"
-                role="tablist"
-              >
-              Mechanical
-              </a>
-            </li>
-            <li className="-mb-px mr-2 last:mr-0 flex-auto text-center">
-              <a
-                className={
-                  "text-xs font-bold uppercase px-5 py-3 shadow-lg rounded block leading-normal " +
-                  (openTab === 2
-                    ? "text-white bg-pink-600"
-                    : "text-pink-600 bg-white")
-                }
-                onClick={e => {
-                  e.preventDefault();
-                  setOpenTab(2);
-                }}
-                data-toggle="tab"
-                href="#link2"
-                role="tablist"
-              >
-                 Behavioural
-              </a>
-            </li>
-            <li className="-mb-px mr-2 last:mr-0 flex-auto text-center">
-              <a
-                className={
-                  "text-xs font-bold uppercase px-5 py-3 shadow-lg rounded block leading-normal " +
-                  (openTab === 3
-                    ? "text-white bg-pink-600"
-                    : "text-pink-600 bg-white")
-                }
-                onClick={e => {
-                  e.preventDefault();
-                  setOpenTab(3);
-                }}
-                data-toggle="tab"
-                href="#link3"
-                role="tablist"
-              >
-                 Combined Leaderboard
-              </a>
-            </li>
-          </ul>
-          <div className="relative flex flex-col min-w-0 break-words bg-white w-full mb-6 shadow-lg rounded">
-            <div className="px-4 py-5 flex-auto">
-              <div className="tab-content tab-space">
-                <div className={openTab === 1 ? "block" : "hidden"} id="link1">
-
-                  {/*  */}
-          <div className="mb-4">
-          <label className="block mb-2 text-gray-700 font-semibold">
-            Mechanical File
-          </label>
-          <input
+      <div className="p-6 bg-gray-100 rounded-lg shadow-lg max-w-md mx-auto">
+        <input
           type="text"
           placeholder="Name"
           value={name}
@@ -375,14 +208,39 @@ const AdminPage = ({ API }) => {
           onChange={(e) => setTruckName(e.target.value)}
           className="w-full mb-4 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
+        <div className="mb-4">
+          <label className="block mb-2 text-gray-700 font-semibold">
+            Mechanical File
+          </label>
           <input
             type="file"
             onChange={(e) => handleFileChange(e, "mechanical")}
             className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200"
           />
         </div>
+        <div className="mb-4">
+          <label className="block mb-2 text-gray-700 font-semibold">
+            Behavioral File
+          </label>
+          <input
+            type="file"
+            onChange={(e) => handleFileChange(e, "behavioral")}
+            className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200"
+          />
+        </div>
+        <div className="mb-4">
+          <label className="block mb-2 text-gray-700 font-semibold">
+            Dumper File
+          </label>
+          <input
+            type="file"
+            onChange={(e) => handleFileChange(e, "dumper")}
+            className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200"
+          />
+        </div>
+      </div>
 
-        <h2 class="text-4xl font-extrabold text-black">Mechanical Data</h2>
+      <h2 class="text-4xl font-extrabold text-black">Mechanical Data</h2>
       {mechanicalData.length > 0 && (
         <div className="border-4 border-black">
           <div className="flex border-b-2 border-black bg-gray-200">
@@ -434,85 +292,7 @@ const AdminPage = ({ API }) => {
         </div>
       )}
 
-      <button
-            onClick={handleMechanicalSubmit}
-            class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800 mt-4"
-          >
-            Calculate Mechanical 
-      </button>
-
-      <div className="leaderboard">
-  <h1 class="text-3xl font-extrabold text-black mt-8 mb-2">
-    Leaderboard
-  </h1>
-
-  <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
-    <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
-      <thead class="text-md text-gray-700 uppercase dark:text-gray-400 ">
-        <tr>
-          <th scope="col" class="px-6 py-3 bg-gray-50 dark:bg-gray-800">
-            Serial Number
-          </th>
-          <th scope="col" class="px-6 py-4">
-            Name
-          </th>
-          <th scope="col" class="px-6 py-3 bg-gray-50 dark:bg-gray-800">
-            Operator Name
-          </th>
-          <th scope="col" class="px-6 py-4">
-            Score
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        {mechanicalLeaderboard.map((entry, index) => (
-          <tr
-            key={index}
-            className="border-b border-gray-200 dark:border-gray-700 text-sm"
-          >
-            <td className="px-6 py-4 bg-gray-50 dark:bg-gray-800">
-              {index + 1}
-            </td>{" "}
-            <td className="px-6 py-4">{entry.name}</td>
-            <td className="px-6 py-4 bg-gray-50 dark:bg-gray-800">
-              {entry.truckName}
-            </td>
-            <td className="px-6 py-4">{entry.score}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  </div>
-</div>
-
-
-                </div>
-                <div className={openTab === 2 ? "block" : "hidden"} id="link2">
-                  {/*  */} 
-                  {/*  */}
-                  <div className="mb-4">
-          <label className="block mb-2 text-gray-700 font-semibold">
-            Behavioral File
-          </label>
-          <input
-            type="file"
-            onChange={(e) => handleFileChange(e, "behavioral")}
-            className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200"
-          />
-        </div>
-        <div className="mb-4">
-          <label className="block mb-2 text-gray-700 font-semibold">
-            Dumper File
-          </label>
-          <input
-            type="file"
-            onChange={(e) => handleFileChange(e, "dumper")}
-            className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200"
-          />
-        </div>
-
-
-        <h2 class="text-4xl font-extrabold text-black">Behavioural Data</h2>
+      <h2 class="text-4xl font-extrabold text-black">Behavioural Data</h2>
       {behavioralData.length > 0 && (
         <div className="border-4 border-black">
           <div className="flex border-b-2 border-black bg-gray-200">
@@ -563,9 +343,8 @@ const AdminPage = ({ API }) => {
           </div>
         </div>
       )}
-
-
-<h2 class="text-4xl font-extrabold text-black">Dumper Data</h2>
+      {/*  */}
+      <h2 class="text-4xl font-extrabold text-black">Dumper Data</h2>
       {dumperData.length > 0 && (
         <div className="border-4 border-black">
           <div className="flex border-b-2 border-black bg-gray-200">
@@ -614,14 +393,22 @@ const AdminPage = ({ API }) => {
         </div>
       )}
 
+      {/*  */}
+
       <button
-            onClick={handleBehaviouralSubmit}
-            class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800 mt-4"
-          >
-            Calculate Behavioural
+        onClick={handleSubmit}
+        class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800 mt-4"
+      >
+        Calculate Combined Score
       </button>
 
-      <div className="leaderboard">
+    </div>
+  );
+};
+
+export default AdminPage;
+
+{/* <div className="leaderboard">
   <h1 class="text-3xl font-extrabold text-black mt-8 mb-2">
     Leaderboard
   </h1>
@@ -636,47 +423,8 @@ const AdminPage = ({ API }) => {
           <th scope="col" class="px-6 py-4">
             Name
           </th>
-          <th scope="col" class="px-6 py-4">
-            Score
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        {behaviouralDumperLeaderboard.map((entry, index) => (
-          <tr
-            key={index}
-            className="border-b border-gray-200 dark:border-gray-700 text-sm"
-          >
-            <td className="px-6 py-4 bg-gray-50 dark:bg-gray-800">
-              {index + 1}
-            </td>{" "}
-            <td className="px-6 py-4">{entry.name}</td>
-            <td className="px-6 py-4">{entry.score}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  </div>
-</div>
-
-                  {/*  */}
-                  {/*  */}
-                </div>
-                <div className={openTab === 3 ? "block" : "hidden"} id="link3">
-                 <div className="leaderboard">
-  <h1 class="text-3xl font-extrabold text-black mt-8 mb-2">
-    Leaderboard
-  </h1>
-
-  <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
-    <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
-      <thead class="text-md text-gray-700 uppercase dark:text-gray-400 ">
-        <tr>
           <th scope="col" class="px-6 py-3 bg-gray-50 dark:bg-gray-800">
-            Serial Number
-          </th>
-          <th scope="col" class="px-6 py-4">
-            Name
+            Operator Name
           </th>
           <th scope="col" class="px-6 py-4">
             Score
@@ -684,7 +432,7 @@ const AdminPage = ({ API }) => {
         </tr>
       </thead>
       <tbody>
-        {combinedLeaderboard.map((entry, index) => (
+        {leaderboard.map((entry, index) => (
           <tr
             key={index}
             className="border-b border-gray-200 dark:border-gray-700 text-sm"
@@ -702,21 +450,4 @@ const AdminPage = ({ API }) => {
       </tbody>
     </table>
   </div>
-</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-
-
-      
-      {/*  */}
-
-    </div>
-  );
-};
-
-export default AdminPage;
+</div> */}
