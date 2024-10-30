@@ -22,14 +22,16 @@ const ProtectedRoute = ({ children }) => {
 };
 
 function App() {
+  const API = process.env.REACT_APP_API_URL;
+
   return (
     <AuthProvider>
       <Router>
         <Routes>
-          <Route path="/" element={<Mainpage />} />
-          <Route path="/user/signin" element={<Signin />} />
-          <Route path="/user/signup" element={<Signup />} />
-          <Route path="/admin" element={<AdminPage />} />
+          <Route path="/" element={<Mainpage API={API} />} />
+          <Route path="/user/signin" element={<Signin API={API} />} />
+          <Route path="/user/signup" element={<Signup API={API} />} />
+          <Route path="/admin" element={<AdminPage API={API} />} />
         </Routes>
       </Router>
     </AuthProvider>
