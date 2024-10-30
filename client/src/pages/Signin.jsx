@@ -6,7 +6,7 @@ const Signin = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
-
+  const key = process.env.REACT_PUBLIC_API_URL;
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -76,7 +76,9 @@ const Signin = () => {
             </button>
           </div>
         </form>
-
+        <p className="mt-10 text-center text-sm text-gray-500">
+          Not a member? <Link to="/user/signup" className="font-semibold leading-6 text-indigo-600 hover:text-indigo-500">Sign up</Link>
+        </p>
       </div>
     </div>
     </>

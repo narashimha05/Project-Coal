@@ -15,6 +15,7 @@ const AdminPage = () => {
     const [currentBehavioralPage, setCurrentBehavioralPage] = useState(1);
     const [currentDumperPage, setCurrentDumperPage] = useState(1);
     const rowsPerPage = 10;
+    const key = process.env.REACT_PUBLIC_API_URL;
 
     const mechanicalPredefinedColumns = [
         'EFR', 'HRTVD', 'MET', 'ROT', 'ES', 'OP', 'EAPP', 'OT', 'CBP', 
@@ -67,7 +68,7 @@ const AdminPage = () => {
 
     const handleSubmit = async () => {
         try {
-            const response = await axios.post('https://project-coal-backend.onrender.com/api/upload', {
+            const response = await axios.post('http://localhost:5000/api/upload', {
                 name,
                 truckName,
                 mechanicalData,
@@ -91,7 +92,7 @@ const AdminPage = () => {
 
     const fetchLeaderboard = async () => {
         try {
-            const response = await axios.get('https://project-coal-backend.onrender.com/api/leaderboard');
+            const response = await axios.get('http://localhost:5000/api/leaderboard');
             setLeaderboard(response.data);
         } catch (error) {
             console.error('Error fetching leaderboard:', error);
