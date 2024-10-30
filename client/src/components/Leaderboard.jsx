@@ -8,6 +8,7 @@ const Leaderboard = ({ API }) => {
     try {
       const response = await axios.get(API + "api/combinedleaderboard");
       setCombinedLeaderboard(response.data);
+      await fetchCombinedLeaderboard();
     } catch (error) {
       console.error("Error fetching leaderboard:", error);
     }

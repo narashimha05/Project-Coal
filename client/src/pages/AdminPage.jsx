@@ -176,6 +176,7 @@ const AdminPage = ({ API }) => {
     try {
       const response = await axios.get(API + "api/mechanical");
       setMechanicalLeaderboard(response.data);
+      await fetchMechanicalLeaderboard();
     } catch (error) {
       console.error("Error fetching leaderboard:", error);
     }
@@ -189,6 +190,7 @@ const AdminPage = ({ API }) => {
     try {
       const response = await axios.get(API + "api/behavioral");
       setBehaviouralDumperLeaderboard(response.data.leaderboard);
+      await fetchBehaviouralDumperLeaderboard();
     } catch (error) {
       console.error("Error fetching leaderboard:", error);
     }
@@ -202,6 +204,7 @@ const AdminPage = ({ API }) => {
     try {
       const response = await axios.get(API + "api/combinedleaderboard");
       setCombinedLeaderboard(response.data);
+      await fetchCombinedLeaderboard();
     } catch (error) {
       console.error("Error fetching leaderboard:", error);
     }
@@ -383,6 +386,7 @@ const AdminPage = ({ API }) => {
         </div>
 
         <h2 class="text-4xl font-extrabold text-black">Mechanical Data</h2>
+        <h2 class="text-sm text-black mb-4">After uploading table will be rendered below here</h2>
       {mechanicalData.length > 0 && (
         <div className="border-4 border-black">
           <div className="flex border-b-2 border-black bg-gray-200">
@@ -513,6 +517,7 @@ const AdminPage = ({ API }) => {
 
 
         <h2 class="text-4xl font-extrabold text-black">Behavioural Data</h2>
+        <h2 class="text-sm text-black mb-4">After uploading table will be rendered below here</h2>
       {behavioralData.length > 0 && (
         <div className="border-4 border-black">
           <div className="flex border-b-2 border-black bg-gray-200">
@@ -565,7 +570,8 @@ const AdminPage = ({ API }) => {
       )}
 
 
-<h2 class="text-4xl font-extrabold text-black">Dumper Data</h2>
+<h2 class="text-4xl font-extrabold text-black">Dumper Cycle Data</h2>
+<h2 class="text-sm text-black mb-4">After uploading table will be rendered below here</h2>
       {dumperData.length > 0 && (
         <div className="border-4 border-black">
           <div className="flex border-b-2 border-black bg-gray-200">
@@ -693,9 +699,9 @@ const AdminPage = ({ API }) => {
               {index + 1}
             </td>{" "}
             <td className="px-6 py-4">{entry.name}</td>
-            <td className="px-6 py-4 bg-gray-50 dark:bg-gray-800">
+            {/* <td className="px-6 py-4 bg-gray-50 dark:bg-gray-800">
               {entry.truckName}
-            </td>
+            </td> */}
             <td className="px-6 py-4">{entry.score}</td>
           </tr>
         ))}
