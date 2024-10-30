@@ -68,7 +68,7 @@ const AdminPage = () => {
 
     const handleSubmit = async () => {
         try {
-            const response = await axios.post('https://project-coal.onrender.com/api/upload', {
+            const response = await axios.post('http://localhost:5000/api/upload', {
                 name,
                 truckName,
                 mechanicalData,
