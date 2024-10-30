@@ -76,9 +76,9 @@ const Signin = () => {
             </button>
           </div>
         </form>
-        <p className="mt-10 text-center text-sm text-gray-500">
+{/*         <p className="mt-10 text-center text-sm text-gray-500">
           Not a member? <Link to="/user/signup" className="font-semibold leading-6 text-indigo-600 hover:text-indigo-500">Sign up</Link>
-        </p>
+        </p> */}
       </div>
     </div>
     </>
