@@ -4,7 +4,6 @@ const Score = require('../models/Score');
 const MechanicalScore = require('../models/MechanicalScore');
 const BehavioralDumperScore = require('../models/BehaviouralDumperScore');
 
-
 // Define column weights for mechanical and behavioral data
 const columnWeights = {
     'EFR': 0.2, 'HRTVD': 0.15, 'MET': 0.12, 'ROT': 0.1, 'ES': 0.08, 
@@ -24,21 +23,13 @@ const calculateScore = (fileData, excelColumns, predefinedColumns, columnWeights
         const colIndex = excelColumns.indexOf(col);
         if (colIndex !== -1) {
             const colValues = fileData.map((row) => parseFloat(row[colIndex] || 0));
-            let colMean = colValues.reduce((acc, val) => acc + val, 0) / colValues.length;
-
-            if (col === 'STB') {
-                colMean -= 30;
-            }
+            const colMean = colValues.reduce((acc, val) => acc + val, 0) / colValues.length;
 
             const weight = columnWeights[col] || 0;
             let weightedValue = colMean * weight;
 
-            if (negativeColumns.includes(col)) {
-                weightedValue = -Math.abs(weightedValue);
-            } else if (positiveColumns.includes(col)) {
-                weightedValue = Math.abs(weightedValue);
-            }
-
+            // Apply negative or positive weighting
+            weightedValue = negativeColumns.includes(col) ? -Math.abs(weightedValue) : Math.abs(weightedValue);
             totalScore += weightedValue;
         }
     });
@@ -46,10 +37,11 @@ const calculateScore = (fileData, excelColumns, predefinedColumns, columnWeights
     return totalScore;
 };
 
+// Calculate combined score for behavioral and dumper data
 const calculateCombinedScore = (behavioralData, dumperData) => {
     const combinedData = {};
 
-    // Step 1: Add entries from behavioralData
+    // Process behavioral data
     behavioralData.forEach(row => {
         const name = row[0];
         if (!name) {
@@ -64,7 +56,7 @@ const calculateCombinedScore = (behavioralData, dumperData) => {
         combinedData[name].STB += parseFloat(row[3] || 0) || 0;
     });
 
-    // Step 2: Add entries from dumperData
+    // Process dumper data
     dumperData.forEach(row => {
         const name = row[0];
         if (!name) {
@@ -80,8 +72,8 @@ const calculateCombinedScore = (behavioralData, dumperData) => {
         combinedData[name].ET += parseFloat(row[4] || 0) || 0;
     });
 
-    // Step 3: Calculate the weighted score for each entry, treating missing values as 0
-    const scores = Object.values(combinedData).map(row => {
+    // Calculate weighted score for each entry
+    return Object.values(combinedData).map(row => {
         const weightedScore = (
             (row.ES * (columnWeights['ES'] || 0)) +
             (row.LS * (columnWeights['LS'] || 0)) +
@@ -97,126 +89,138 @@ const calculateCombinedScore = (behavioralData, dumperData) => {
             score: isNaN(weightedScore) || !isFinite(weightedScore) ? 0 : weightedScore
         };
     });
-
-    return scores;
 };
-
-
-
-
 
 // Calculate the dumper cycle score based on the formula (TTH * TL) / (HT + ET)
 const calculateDumperScore = (dumperData, dumperColumns) => {
+    // Identify the index of required columns
     const TTHIndex = dumperColumns.indexOf('TTH');
     const TLIndex = dumperColumns.indexOf('TL');
     const HTIndex = dumperColumns.indexOf('HT');
     const ETIndex = dumperColumns.indexOf('ET');
 
-    const rowResults = dumperData.map(row => {
+    // Verify if all required columns are available
+    if (TTHIndex === -1 || TLIndex === -1 || HTIndex === -1 || ETIndex === -1) {
+        console.error("Missing one or more required columns (TTH, TL, HT, ET) in dumperColumns.");
+        return 0;
+    }
+
+    // Calculate results per row, logging each step to verify data handling
+    const rowResults = dumperData.map((row, rowIndex) => {
         const TTH = parseFloat(row[TTHIndex] || 0);
         const TL = parseFloat(row[TLIndex] || 0);
         const HT = parseFloat(row[HTIndex] || 0);
         const ET = parseFloat(row[ETIndex] || 0);
 
-        return HT + ET !== 0 ? (TTH * TL) / (HT + ET) : 0;
+        console.log(`Row ${rowIndex}: TTH=${TTH}, TL=${TL}, HT=${HT}, ET=${ET}`);
+
+        // Handle division by zero if HT + ET equals zero
+        const result = (HT + ET) !== 0 ? (TTH * TL) / (HT + ET) : 0;
+        
+        // Log the computed result for this row
+        console.log(`Row ${rowIndex} Result: ${result}`);
+
+        return result;
     });
 
-    const meanRowResult = rowResults.reduce((acc, val) => acc + val, 0) / rowResults.length;
-    return meanRowResult * -0.88;
+    // Filter out NaN or infinite values
+    const validRowResults = rowResults.filter(result => !isNaN(result) && isFinite(result));
+
+    // Calculate mean of valid results, if any are valid
+    const meanRowResult = validRowResults.length > 0
+        ? validRowResults.reduce((acc, val) => acc + val, 0) / validRowResults.length
+        : 0;
+
+    // Log the mean result before applying the weight factor
+    console.log(`Mean Row Result (before weight): ${meanRowResult}`);
+
+    // Apply the -0.88 weight factor
+    const weightedScore = meanRowResult * -0.88;
+    console.log(`Final Dumper Score (after weight): ${weightedScore}`);
+
+    return weightedScore;
 };
 
+
+
+
+// Main upload route
 router.post('/upload', async (req, res) => {
     const { name, truckName, mechanicalData = [], mechanicalColumns = [], behavioralData = [], behavioralColumns = [], dumperData = [], dumperColumns = [] } = req.body;
 
-    // Define column sets for mechanical, behavioral, and dumper files
-    const mechanicalPredefinedColumns = [
-        'EFR', 'HRTVD', 'MET', 'ROT', 'ES', 'OP', 'EAPP', 'OT', 'CBP', 
-        'RP', 'WBVS', 'FBP', 'CT'
-    ];
+    const mechanicalPredefinedColumns = ['EFR', 'HRTVD', 'MET', 'ROT', 'ES', 'OP', 'EAPP', 'OT', 'CBP', 'RP', 'WBVS', 'FBP', 'CT'];
     const behavioralPredefinedColumns = ['ES', 'LS', 'STB'];
-    const dumperPredefinedColumns = ['TTH', 'TL', 'HT', 'ET'];
 
-    // Calculate scores conditionally
-    const mechanicalScore = mechanicalData.length > 0 
-        ? calculateScore(mechanicalData, mechanicalColumns, mechanicalPredefinedColumns, columnWeights) 
-        : 0;
+    const mechanicalScore = mechanicalData.length > 0 ? calculateScore(mechanicalData, mechanicalColumns, mechanicalPredefinedColumns, columnWeights) : 0;
+    const behavioralScore = behavioralData.length > 0 ? calculateScore(behavioralData, behavioralColumns, behavioralPredefinedColumns, columnWeights) : 0;
+    const dumperScore = dumperData.length > 0 ? calculateDumperScore(dumperData, dumperColumns) : 0;
 
-    const behavioralScore = behavioralData.length > 0 
-        ? calculateScore(behavioralData, behavioralColumns, behavioralPredefinedColumns, columnWeights) 
-        : 0;
-
-    const dumperScore = dumperData.length > 0 
-        ? calculateDumperScore(dumperData, dumperColumns) 
-        : 0;
-
-    // Combine the scores
     const totalScore = mechanicalScore + behavioralScore + dumperScore;
 
-    // Save the combined score to the database
-    const newScore = new Score({
-        name,
-        truckName,
-        mechanicalColumns,
-        behavioralColumns,
-        dumperColumns,
-        mechanicalData,
-        behavioralData,
-        dumperData,
-        score: totalScore,
-    });
-
-    await newScore.save();
-
-    return res.json({ success: true, score: totalScore });
+    try {
+        const newScore = new Score({
+            name,
+            truckName,
+            mechanicalColumns,
+            behavioralColumns,
+            dumperColumns,
+            mechanicalData,
+            behavioralData,
+            dumperData,
+            score: totalScore,
+        });
+        await newScore.save();
+        res.json({ success: true, score: totalScore });
+    } catch (error) {
+        res.status(500).json({ success: false, error: 'Error saving total score.' });
+    }
 });
 
+// Route to handle mechanical score calculation and storage
 router.post('/mechanical', async (req, res) => {
     const { name, truckName, mechanicalData = [], mechanicalColumns = [] } = req.body;
 
-    const mechanicalPredefinedColumns = [
-        'EFR', 'HRTVD', 'MET', 'ROT', 'ES', 'OP', 'EAPP', 'OT', 'CBP', 
-        'RP', 'WBVS', 'FBP', 'CT'
-    ];
+    const mechanicalPredefinedColumns = ['EFR', 'HRTVD', 'MET', 'ROT', 'ES', 'OP', 'EAPP', 'OT', 'CBP', 'RP', 'WBVS', 'FBP', 'CT'];
 
-    const mechanicalScore = mechanicalData.length > 0 
-        ? calculateScore(mechanicalData, mechanicalColumns, mechanicalPredefinedColumns, columnWeights) 
-        : 0;
+    const mechanicalScore = mechanicalData.length > 0 ? calculateScore(mechanicalData, mechanicalColumns, mechanicalPredefinedColumns, columnWeights) : 0;
 
-    const newScore = new MechanicalScore({
-        name,
-        truckName,
-        mechanicalColumns,
-        mechanicalData,
-        score: mechanicalScore,
-    });
-
-    await newScore.save();
-
-    return res.json({ success: true, score: mechanicalScore });
+    try {
+        const newScore = new MechanicalScore({
+            name,
+            truckName,
+            mechanicalColumns,
+            mechanicalData,
+            score: mechanicalScore,
+        });
+        await newScore.save();
+        res.json({ success: true, score: mechanicalScore });
+    } catch (error) {
+        res.status(500).json({ success: false, error: 'Error saving mechanical score.' });
+    }
 });
 
+// Route to handle combined behavioral and dumper score calculation and storage
 router.post('/behavioral', async (req, res) => {
     const { behavioralData = [], behavioralColumns = [], dumperData = [], dumperColumns = [] } = req.body;
 
-    // Calculate scores and check output structure
     const scores = calculateCombinedScore(behavioralData, dumperData);
-    console.log("Scores array:", scores);  // Debugging: log to check structure
-
+    const dumperScore = calculateDumperScore(dumperData, dumperColumns);
     const savedScores = [];
+
     for (const scoreEntry of scores) {
-        // Check if scoreEntry has a NAME field
         if (!scoreEntry.NAME) {
-            console.warn("Missing NAME for entry:", scoreEntry);  // Warn if NAME is undefined
+            console.warn("Missing NAME for entry:", scoreEntry);
             continue;
         }
+        const totalScore = scoreEntry.score + dumperScore;
 
         const newScore = new BehavioralDumperScore({
-            name: scoreEntry.NAME, // Use the NAME field from combined score data
+            name: scoreEntry.NAME,
             behavioralColumns,
             behavioralData,
             dumperColumns,
             dumperData,
-            score: scoreEntry.score,
+            score: totalScore,
         });
 
         try {
@@ -228,10 +232,7 @@ router.post('/behavioral', async (req, res) => {
         }
     }
 
-    return res.json({ success: true, savedScores });
+    res.json({ success: true, savedScores });
 });
-
-
-
 
 module.exports = router;
